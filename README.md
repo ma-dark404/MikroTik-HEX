@@ -1,26 +1,26 @@
 <div align="center">
-  <h1>🟥 HEX RED PHANTOM 🟥</h1>
-  <h3>أداة اختبار الاختراق المتكاملة لأجهزة MikroTik</h3>
+  <h1>🟥 HEX PHANTOM 🟥</h1>
+  <h3>أداة الاختراق المتكاملة لأجهزة MikroTik</h3>
   <p>
     <img src="https://img.shields.io/badge/version-v2.0.0-red?style=for-the-badge" alt="version">
     <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-blue?style=for-the-badge" alt="platform">
     <img src="https://img.shields.io/badge/build-automatic-success?style=for-the-badge" alt="build">
+  </p>
+  <p>
+    <a href="https://t.me/GoToHEX"><img src="https://img.shields.io/badge/Telegram-قناتنا%20الرسمية-blue?style=for-the-badge&logo=telegram" alt="Telegram"></a>
   </p>
 </div>
 
 ---
 
 ## 📖 **عن الأداة**
-**HEX RED PHANTOM** هي أداة متطورة لاختبار اختراق أجهزة MikroTik RouterOS.  
-تتميز بواجهة احترافية، كشف تلقائي للرواتر، هجوم متعدد الخيوط، ودعم جميع أنظمة التشغيل.
+**HEX PHANTOM** هي أداة أتمتة لتخمين واختراق بطاقات شبكات المايكروتك (Hotspot) عبر هجوم الـ Brute-Force.
 
 ---
 
 ## ✨ **الميزات الرئيسية**
 - ⚡ **هجوم سريع** متعدد الخيوط (Multi-threading)
-- 🧠 **اكتشاف تلقائي** للرواتر على الشبكة
-- 💣 **توليد ذكي** لكلمات المرور حسب النمط
-- 🛡️ **حماية مضادة للتفكيك** (Anti-Debug) لمنع التحليل
+- 🧠 **اكتشاف تلقائي** للراوتر على الشبكة
 - 💻 **تشغيل مباشر** بدون تثبيت بايثون أو مكتبات خارجية
 - 📁 **حفظ واستئناف** الهجمات
 - 🌍 **دعم كامل** للغتين العربية والإنجليزية
