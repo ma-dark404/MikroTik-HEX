@@ -360,7 +360,7 @@ def main():
         sp2.start()
         try:
             with urllib.request.urlopen(
-                "https://api.github.com/repos/ma-dark404/MikroTik-OFF/releases/latest",
+                "https://api.github.com/repos/ma-dark404/MikroTik-HEX/releases/latest",
                 timeout=NET_TIMEOUT
             ) as resp:
                 data = json.loads(resp.read().decode())
