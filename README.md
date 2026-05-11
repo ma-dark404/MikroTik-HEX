@@ -1,13 +1,12 @@
 <div align="center">
   <h1>🟥 HEX PHANTOM 🟥</h1>
-  <h3>أداة الاختراق المتكاملة لأجهزة MikroTik</h3>
+  <a href="https://t.me/GoToHEX">
+    <img src="https://img.shields.io/badge/Telegram-GoToHEX-blue?style=for-the-badge&logo=telegram" alt="Telegram">
+  </a>
   <p>
     <img src="https://img.shields.io/badge/version-v2.0.0-red?style=for-the-badge" alt="version">
     <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-blue?style=for-the-badge" alt="platform">
     <img src="https://img.shields.io/badge/build-automatic-success?style=for-the-badge" alt="build">
-  </p>
-  <p>
-    <a href="https://t.me/GoToHEX"><img src="https://img.shields.io/badge/Telegram-قناتنا%20الرسمية-blue?style=for-the-badge&logo=telegram" alt="Telegram"></a>
   </p>
 </div>
 
