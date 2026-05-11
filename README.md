@@ -1,0 +1,49 @@
+<div align="center">
+  <h1>🟥 HEX RED PHANTOM 🟥</h1>
+  <h3>أداة اختبار الاختراق المتكاملة لأجهزة MikroTik</h3>
+  <p>
+    <img src="https://img.shields.io/badge/version-v2.0.0-red?style=for-the-badge" alt="version">
+    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-blue?style=for-the-badge" alt="platform">
+    <img src="https://img.shields.io/badge/build-automatic-success?style=for-the-badge" alt="build">
+  </p>
+</div>
+
+---
+
+## 📖 **عن الأداة**
+**HEX RED PHANTOM** هي أداة متطورة لاختبار اختراق أجهزة MikroTik RouterOS.  
+تتميز بواجهة احترافية، كشف تلقائي للرواتر، هجوم متعدد الخيوط، ودعم جميع أنظمة التشغيل.
+
+---
+
+## ✨ **الميزات الرئيسية**
+- ⚡ **هجوم سريع** متعدد الخيوط (Multi-threading)
+- 🧠 **اكتشاف تلقائي** للرواتر على الشبكة
+- 💣 **توليد ذكي** لكلمات المرور حسب النمط
+- 🛡️ **حماية مضادة للتفكيك** (Anti-Debug) لمنع التحليل
+- 💻 **تشغيل مباشر** بدون تثبيت بايثون أو مكتبات خارجية
+- 📁 **حفظ واستئناف** الهجمات
+- 🌍 **دعم كامل** للغتين العربية والإنجليزية
+
+---
+
+## 💻 **الأنظمة المدعومة**
+
+| النظام | المعمارية | الملف |
+|--------|-----------|-------|
+| 🪟 Windows 10/11 | x64 | `hex_phantom_windows_x64.exe` |
+| 🪟 Windows 7/8 | x86 | `hex_phantom_windows_x86.exe` |
+| 🐧 Linux | x64 | `hex_phantom_linux_x64` |
+| 🍓 Raspberry Pi 4/5 | ARM64 | `hex_phantom_linux_arm64` |
+| 🍓 Raspberry Pi 2/3 | ARMv7 | `hex_phantom_linux_armv7` |
+| 📱 Android (Termux) | ARM64 | `hex_phantom_android_arm64` |
+
+---
+
+## 🚀 **التثبيت والتشغيل**
+
+### **الطريقة الأسهل (موصى بها)**
+```bash
+git clone https://github.com/ma-dark404/MikroTik-HEX.git
+cd MikroTik-HEX
+python hex_installer.py
