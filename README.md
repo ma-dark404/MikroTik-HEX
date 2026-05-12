@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🟥 HEX PHANTOM 🟥</h1>
+  <h1>🥷 HEX PHANTOM 🥷</h1>
   <a href="https://t.me/GoToHEX">
     <img src="https://img.shields.io/badge/Telegram-GoToHEX-blue?style=for-the-badge&logo=telegram" alt="Telegram">
   </a>
