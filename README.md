@@ -37,9 +37,7 @@
 | 🍓 Raspberry Pi 2/3 | ARMv7 | `hex_phantom_linux_armv7` |
 | 📱 Android (Termux) | ARM64 | `hex_phantom_android_arm64` |
 
----
-
----## 🚀 **التثبيت والتشغيل**
+## 🚀 **التثبيت والتشغيل**
 
 ```bash
 git clone https://github.com/ma-dark404/MikroTik-HEX.git
@@ -52,7 +50,7 @@ bash hex_installer.sh
 
 ## ⚡ **التشغيل السريع**
 
-بعد تثبيت الأداة، تقدر تشغلها من أي مكان بمجرد كتابة:
+بعد تثبيت الأداة، يمكنك تشغيلها في أي وقت بمجرد كتابة:
 
 ```bash
 HEX-M
