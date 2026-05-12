@@ -73,7 +73,7 @@ info_box() {
     echo
 }
 
-# ── SMART DOWNLOADER (No Counters) ─────────────────────
+# ── SMART DOWNLOADER ───────────────────────────────────
 download_smart() {
     local url="$1"
     local dest="$2"
@@ -177,11 +177,11 @@ main() {
         echo -e "  ${r1}✗${R}  ${W}Unsupported System${R}"; exit 1
     fi
 
-    if [ -f "./src/$PLATFORM" ]; then
-        echo -e "  ${G1}${B}→${R}  ${W}...ﺮﺷﺎﺒﻣ ﻞﻴﻐﺸﺗ${R}"
-        chmod +x "./src/$PLATFORM"
-        "./src/$PLATFORM" "$@"
-        exit 0
+    # التحقق من وجود الملف في bin أولاً لتشغيله كأمر
+    if command -v HEX-M &> /dev/null; then
+         echo -e "  ${G1}${B}→${R}  ${W}...ﺮﺷﺎﺒﻣ ﻞﻴﻐﺸﺗ${R}"
+         HEX-M "$@"
+         exit 0
     fi
 
     local api_url="https://api.github.com/repos/ma-dark404/MikroTik-HEX/releases/latest"
@@ -209,9 +209,13 @@ main() {
 
     download_smart "$dl_url" "$PLATFORM"
 
+    
     chmod +x "$PLATFORM"
-    ./"$PLATFORM" "$@"
+    mv "$PLATFORM" "$PREFIX/bin/HEX-M" 2>/dev/null
+    chmod +x "$PREFIX/bin/HEX-M"
+
+    # تشغيل الأداة
+    HEX-M "$@"
 }
 
 main "$@"
-
