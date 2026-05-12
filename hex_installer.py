@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ── ANSI COLORS (Strictly from Python) ─────────────────
+# ── ANSI COLORS ────────────────────────────────────────
 R="\e[0m";  B="\e[1m"
 W="\e[97m"; GR="\e[90m"
 G1="\e[38;5;46m"; Y1="\e[93m"
@@ -13,7 +13,6 @@ hide() { printf "\e[?25l"; }
 show() { printf "\e[?25h"; }
 clear_scr() { printf "\e[2J\e[H"; }
 clr_line() { printf "\e[2K\r"; }
-
 
 vlen() {
     local clean=$(echo -e "$1" | sed 's/\x1b\[[0-9;]*m//g')
@@ -74,11 +73,10 @@ info_box() {
     echo
 }
 
-# ── SMART DOWNLOADER (The "Solution") ──────────────────
+# ── SMART DOWNLOADER (No Counters) ─────────────────────
 download_smart() {
     local url="$1"
     local dest="$2"
-    
     
     local total_size=$(curl -sIL "$url" | grep -i Content-Length | tail -n1 | awk '{print $2}' | tr -d '\r')
     [ -z "$total_size" ] && total_size=0
@@ -89,45 +87,53 @@ download_smart() {
     cpad "$l_msg"; echo -e "$l_msg"
     echo
 
-    
-    curl -L -s -o "$dest" "$url" &
-    local pid=$!
     local start_t=$(date +%s%N)
 
-    
-    while kill -0 $pid 2>/dev/null; do
-        local cur_size=$(stat -c%s "$dest" 2>/dev/null || echo 0)
-        local width=$(tw)
-        local bar_w=$(( width - 50 ))
-        [ $bar_w -lt 15 ] && bar_w=15
+    while true; do
+        curl -L -s -C - -o "$dest" "$url" &
+        local pid=$!
 
-        if [ "$total_size" -gt 0 ]; then
-            local pct=$(( cur_size * 100 / total_size ))
-            local filled=$(( pct * bar_w / 100 ))
-            local empty=$(( bar_w - filled ))
-            
-            # حساب السرعة (KB/s)
-            local now=$(date +%s%N)
-            local elapsed=$(( (now - start_t) / 1000000000 ))
-            [ $elapsed -le 0 ] && elapsed=1
-            local speed=$(( cur_size / elapsed / 1024 ))
+        while kill -0 $pid 2>/dev/null; do
+            local cur_size=$(stat -c%s "$dest" 2>/dev/null || echo 0)
+            local width=$(tw)
+            local bar_w=$(( width - 50 ))
+            [ $bar_w -lt 15 ] && bar_w=15
 
-            clr_line
-            printf "  ${r1}▌${R}"
-            printf "${r1}%0.s█${R}" $(seq 1 $filled)
-            [ $empty -gt 0 ] && printf "${GR}%0.s░${R}" $(seq 1 $empty)
-            printf "${r1}▐${R} ${r1}${B}%3d%%${R}  ${W}%sMB/%sMB${R}  ${C1}%sKB/s${R}" \
-                   "$pct" "$((cur_size/1048576))" "$((total_size/1048576))" "$speed"
+            if [ "$total_size" -gt 0 ]; then
+                local pct=$(( cur_size * 100 / total_size ))
+                local filled=$(( pct * bar_w / 100 ))
+                local empty=$(( bar_w - filled ))
+                
+                local now=$(date +%s%N)
+                local elapsed=$(( (now - start_t) / 1000000000 ))
+                [ $elapsed -le 0 ] && elapsed=1
+                local speed=$(( (cur_size / elapsed) / 1024 ))
+
+                clr_line
+                printf "  ${r1}▌${R}"
+                [ $filled -gt 0 ] && printf "${r1}%0.s█${R}" $(seq 1 $filled)
+                [ $empty -gt 0 ] && printf "${GR}%0.s░${R}" $(seq 1 $empty)
+                printf "${r1}▐${R} ${r1}${B}%3d%%${R}  ${W}%sMB/%sMB${R}  ${C1}%sKB/s${R}" \
+                       "$pct" "$((cur_size/1048576))" "$((total_size/1048576))" "$speed"
+            else
+                clr_line; printf "  ${r1}▌${R}${r1}▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒${R}${r1}▐${R} ${W}...ﻞﻴﻤﺤﺘﻟﺍ ﻱﺭﺎﺟ${R}"
+            fi
+            sleep 0.2
+        done
+
+        wait $pid
+        local res=$?
+
+        if [ $res -eq 0 ]; then
+            break
         else
-            
-            local dots=$(( ( (date +%s) % 4 ) ))
-            clr_line; printf "  ${r1}▌${R}${r1}▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒${R}${r1}▐${R} ${W}...ﻞﻴﻤﺤﺘﻟﺍ ﻱﺭﺎﺟ${R}"
+            clr_line
+            printf "  ${r1}${B}⟳${R}  ${W}ﺔﻜﺒﺸﻟﺍ ﺭﺎﻈﺘﻧﺍ${R}"
+            sleep 5
+            clr_line
         fi
-        sleep 0.1
     done
 
-    wait $pid
-    
     echo -e "\n"
     local ok_msg="  ✓  ﻞﻴﻤﺤﺘﻟﺍ ﻢﺗ  ✓  "
     for col in "$G1" "$W" "$G1" "$W" "$G1"; do
@@ -137,11 +143,10 @@ download_smart() {
     echo -e "\n"
 }
 
-# ── SYSTEM DETECTION (Same as Python) ──────────────────
+# ── SYSTEM DETECTION ───────────────────────────────────
 detect_platform() {
     local os=$(uname -s | tr '[:upper:]' '[:lower:]')
     local arch=$(uname -m | tr '[:upper:]' '[:lower:]')
-    
     
     if [ -n "$PREFIX" ] || [ -d "/system/app" ]; then
         if [[ "$arch" == *"64"* ]] || [[ "$arch" == *"aarch64"* ]]; then
@@ -164,7 +169,6 @@ main() {
     banner_pulse
     info_box
 
-    
     printf "  ${C1}⣾${R}  ${W}Detecting Platform${GR} ...${R}"
     PLATFORM=$(detect_platform)
     clr_line
@@ -173,7 +177,6 @@ main() {
         echo -e "  ${r1}✗${R}  ${W}Unsupported System${R}"; exit 1
     fi
 
-   
     if [ -f "./src/$PLATFORM" ]; then
         echo -e "  ${G1}${B}→${R}  ${W}...ﺮﺷﺎﺒﻣ ﻞﻴﻐﺸﺗ${R}"
         chmod +x "./src/$PLATFORM"
@@ -181,25 +184,34 @@ main() {
         exit 0
     fi
 
-    
     local api_url="https://api.github.com/repos/ma-dark404/MikroTik-HEX/releases/latest"
-    local data=$(curl -sL "$api_url")
+    local data=""
     
-    
+    while [ -z "$data" ]; do
+        data=$(curl -sL "$api_url")
+        if [ $? -ne 0 ] || [[ "$data" != *"browser_download_url"* ]]; then
+            data=""
+            clr_line
+            printf "  ${r1}${B}⟳${R}  ${W}ﺔﻜﺒﺸﻟﺍ ﺭﺎﻈﺘﻧﺍ${R}"
+            sleep 5
+            clr_line
+        else
+            break
+        fi
+    done
+
     local dl_url=$(echo "$data" | grep -oP "https://github.com/ma-dark404/MikroTik-HEX/releases/download/[^\"]+" | grep "$PLATFORM" | head -n1)
 
     if [ -z "$dl_url" ]; then
         echo -e "  ${r1}✗${R}  ${W}ﺩﻮﺟﻮﻣ ﺮﻴﻏ ﻒﻠﻤﻟﺍ${R}"
-        echo -e "  ${GR}(Target: $PLATFORM)${R}"
         exit 1
     fi
 
-    
     download_smart "$dl_url" "$PLATFORM"
 
-    
     chmod +x "$PLATFORM"
     ./"$PLATFORM" "$@"
 }
 
 main "$@"
+
