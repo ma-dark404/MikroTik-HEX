@@ -39,14 +39,15 @@
 
 ---
 
-## 🚀 **التثبيت والتشغيل**
+---## 🚀 **التثبيت والتشغيل**
 
-### 
 ```bash
 git clone https://github.com/ma-dark404/MikroTik-HEX.git
 cd MikroTik-HEX
 chmod +x hex_installer.sh
 bash hex_installer.sh
+```
+
 ---
 
 ## ⚡ **التشغيل السريع**
