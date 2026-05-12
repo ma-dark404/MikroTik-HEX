@@ -40,7 +40,7 @@
 ## 🚀 **التثبيت والتشغيل**
 
 ```bash
-git clone https://github.com/ma-dark404/MikroTik-HEX.git
+git clone https://github.com/ma-dark404/MikroTik-HEX
 cd MikroTik-HEX
 chmod +x hex_installer.sh
 bash hex_installer.sh
