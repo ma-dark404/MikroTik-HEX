@@ -41,8 +41,9 @@
 
 ## 🚀 **التثبيت والتشغيل**
 
-### **الطريقة الأسهل (موصى بها)**
+### 
 ```bash
 git clone https://github.com/ma-dark404/MikroTik-HEX.git
 cd MikroTik-HEX
-python hex_installer.py
+chmod +x hex_installer.sh
+./hex_installer.sh
