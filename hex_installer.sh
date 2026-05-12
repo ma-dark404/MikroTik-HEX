@@ -1,551 +1,475 @@
 #!/usr/bin/env bash
 # -*- coding: utf-8 -*-
+# HEX RED PHANTOM Installer – Bash version (مطابق حرفياً مع إصلاح التوسيط وكل الأخطاء)
+set -euo pipefail
 
 # ── ANSI ────────────────────────────────────────────────
-R=$'\033[0m';  B=$'\033[1m'
-W=$'\033[97m'; GR=$'\033[90m'
-G1=$'\033[38;5;46m';  Y1=$'\033[93m'
-C1=$'\033[38;5;51m';  r1=$'\033[38;5;196m'
+R="\033[0m";    B="\033[1m"
+W="\033[97m";   GR="\033[90m"
+G1="\033[38;5;46m";  Y1="\033[93m"
+C1="\033[38;5;51m";  r1="\033[38;5;196m"
+BAR_COL="\033[38;5;196m"
 
-# ── إعادة الرسم عند تغيير حجم الطرفية ──────────────────
-_RESIZE_FLAG=0
-
-_on_resize() {
-    # عند تغيير حجم الطرفية: نزل سطراً جديداً حتى لا تختلط السطور
-    _RESIZE_FLAG=1
-    printf "\n"
-}
-
-trap '_on_resize' WINCH 2>/dev/null
-
+# ── Terminal size ─────────────────────────────────────
 tw() { tput cols 2>/dev/null || echo 80; }
 th() { tput lines 2>/dev/null || echo 24; }
-hide() { printf '\033[?25l'; }
-show() { printf '\033[?25h'; }
-clear_screen() { printf '\033[2J\033[H'; }
+hide_cursor() { printf "\033[?25l"; }
+show_cursor() { printf "\033[?25h"; }
+clear_screen() { printf "\033[2J\033[H"; }
+clr_line() { printf "\033[2K\r"; }
 
-# ── مساعدات المحاذاة ────────────────────────────────────
+# ── Resize signal (SIGWINCH) ──────────────────────────
+_resize_flag=0
+on_resize() {
+    _resize_flag=1
+    printf "\n"
+}
+trap on_resize SIGWINCH 2>/dev/null || true
 
+# ── Visual length (strip ANSI, emoji width=2) ─────────
 vlen() {
-    # العرض المرئي الفعلي: بدون ANSI، والإيموجي بعرض 2
-    local s="$1"
-    local clean
-    clean=$(printf '%s' "$s" | sed $'s/\033\\[[0-9;]*m//g')
-    local w=0
-    local i len="${#clean}"
-    for ((i=0; i<len; i++)); do
-        local ch="${clean:$i:1}"
-        local cp
-        cp=$(printf '%d' "'$ch" 2>/dev/null || echo 0)
-        if { [ "$cp" -ge 8960 ] && [ "$cp" -le 10175 ]; } || \
-           { [ "$cp" -ge 126976 ] && [ "$cp" -le 131071 ]; }; then
-            w=$((w + 2))
+    local s="$1" clean w=0 ch cp
+    clean=$(printf "%s" "$s" | sed -E 's/\x1b\[[0-9;]*m//g')
+    while IFS= read -r -n1 ch; do
+        [ -z "$ch" ] && continue
+        cp=$(printf "%d" "'$ch")
+        # ranges decimal: 0x2300-0x27BF = 8960-10239, 0x1F000-0x1FFFF = 127744-131071
+        if ([ "$cp" -ge 8960 ] && [ "$cp" -le 10239 ]) || \
+           ([ "$cp" -ge 127744 ] && [ "$cp" -le 131071 ]); then
+            w=$((w+2))
         else
-            w=$((w + 1))
+            w=$((w+1))
         fi
-    done
-    echo "$w"
+    done <<< "$clean"
+    printf "%d" "$w"
 }
 
+# مراكز النص (ترجع المسافات المطلوبة فقط)
 cpad() {
-    local s="$1"
-    local vl cols pad
-    vl=$(vlen "$s")
+    local str="$1" cols len pad
     cols=$(tw)
-    pad=$(( (cols - vl) / 2 ))
-    [ "$pad" -lt 0 ] && pad=0
-    printf '%*s' "$pad" ''
+    len=$(vlen "$str")
+    pad=$(( (cols - len) / 2 ))
+    [ $pad -lt 0 ] && pad=0
+    printf "%${pad}s" ""
 }
 
-clr_line() {
-    # مسح السطر الحالي بالكامل
-    printf '\033[2K\r'
-}
-
-# ── شعار ASCII ─────────────────────────────────────────
+# ── ASCII Banner ──────────────────────────────────────
 BANNER=(
-    "  ██╗  ██╗███████╗██╗  ██╗  "
-    "  ██║  ██║██╔════╝╚██╗██╔╝  "
-    "  ███████║█████╗   ╚███╔╝   "
-    "  ██╔══██║██╔══╝   ██╔██╗   "
-    "  ██║  ██║███████╗██╔╝ ██╗  "
-    "  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝  "
+  "  ██╗  ██╗███████╗██╗  ██╗  "
+  "  ██║  ██║██╔════╝╚██╗██╔╝  "
+  "  ███████║█████╗   ╚███╔╝   "
+  "  ██╔══██║██╔══╝   ██╔██╗   "
+  "  ██║  ██║███████╗██╔╝ ██╗  "
+  "  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝  "
 )
-BANNER_W=30
+BANNER_W=33
 
 PULSE_SEQ=(
-    $'\033[38;5;52m'  $'\033[38;5;88m'  $'\033[38;5;124m'
-    $'\033[38;5;160m' $'\033[38;5;196m' $'\033[38;5;203m'
-    $'\033[38;5;209m' $'\033[38;5;203m' $'\033[38;5;196m'
-    $'\033[38;5;160m' $'\033[38;5;124m' $'\033[38;5;88m'
-    $'\033[38;5;52m'
+  "\033[38;5;52m" "\033[38;5;88m" "\033[38;5;124m"
+  "\033[38;5;160m" "\033[38;5;196m" "\033[38;5;203m"
+  "\033[38;5;209m" "\033[38;5;203m" "\033[38;5;196m"
+  "\033[38;5;160m" "\033[38;5;124m" "\033[38;5;88m"
+  "\033[38;5;52m"
 )
 
 _draw_banner() {
     local col="$1" pad_top="$2"
-    printf '\033[H'
-    local i
-    for ((i=0; i<pad_top; i++)); do printf "\n"; done
-    local cols side_w side
-    cols=$(tw)
+    printf "\033[H"
+    local i; for ((i=0;i<$pad_top;i++)); do printf "\n"; done
+    local cols=$(tw)
+    local side=$(( (cols - BANNER_W) / 2 ))
+    [ $side -lt 0 ] && side=0
+    local spc=$(printf "%${side}s" "")
     for line in "${BANNER[@]}"; do
-        side_w=$(( (cols - BANNER_W) / 2 ))
-        [ "$side_w" -lt 0 ] && side_w=0
-        side=$(printf '%*s' "$side_w" '')
-        printf "%s%s%s%s%s\n" "$side" "$col" "$B" "$line" "$R"
+        printf "%s%b%b%s%b\n" "$spc" "$col" "$B" "$line" "$R"
     done
 }
 
 banner_pulse() {
-    hide
-    clear_screen
-    local banner_len=${#BANNER[@]}
-    local lines pad_top
-    lines=$(th)
-    pad_top=$(( (lines - banner_len - 10) / 2 ))
-    [ "$pad_top" -lt 2 ] && pad_top=2
+    hide_cursor; clear_screen
+    local pad_top=$(( ( $(th) - ${#BANNER[@]} - 10 ) / 2 ))
+    [ $pad_top -lt 2 ] && pad_top=2
 
-    local i
-    for ((i=0; i<7; i++)); do
-        _draw_banner "${PULSE_SEQ[$i]}" "$pad_top"
+    local i col
+    for ((i=0;i<7;i++)); do
+        _draw_banner "${PULSE_SEQ[$i]}" $pad_top
         sleep 0.055
     done
-
-    local round col
-    for ((round=0; round<3; round++)); do
+    for i in {1..3}; do
         for col in "${PULSE_SEQ[@]}"; do
-            _draw_banner "$col" "$pad_top"
+            _draw_banner "$col" $pad_top
             sleep 0.042
         done
     done
+    _draw_banner "\033[38;5;196m" $pad_top
 
-    _draw_banner $'\033[38;5;196m' "$pad_top"
-
-    local cols sep_len max_sep sep j side_w side
-    cols=$(tw)
-    sep_len=$(( cols - 4 ))
-    max_sep=$(( BANNER_W + 6 ))
-    [ "$sep_len" -gt "$max_sep" ] && sep_len="$max_sep"
-    sep=""
-    for ((j=0; j<sep_len; j++)); do sep+="─"; done
-    side_w=$(( (cols - sep_len) / 2 ))
-    [ "$side_w" -lt 0 ] && side_w=0
-    side=$(printf '%*s' "$side_w" '')
-    printf "\n%s%s%s%s\n" "$side" "$GR" "$sep" "$R"
-    show
+    # separator line
+    local sep="" c
+    for ((c=0;c<BANNER_W+6;c++)); do sep+="─"; done
+    local side2=$(( ($(tw) - ${#sep}) / 2 ))
+    [ $side2 -lt 0 ] && side2=0
+    printf "\n%*s%b%s%b\n" $side2 "" "$GR" "$sep" "$R"
+    show_cursor
 }
 
-# ── صندوق المعلومات ──────────────────────────────────────
+# ── Info box ──────────────────────────────────────────
 info_box() {
     printf "\n"
-    local msg1="${r1}${B}✦${R} ${W}${B}HEX RED PHANTOM INSTALLER${R} ${r1}${B}✦${R}"
-    local pad
-    pad=$(cpad "$msg1")
-    printf "%s%s\n" "$pad" "$msg1"
+    local msg1="${r1}${B}✦${R} ${W}${B}HEX PHANTOM INSTALLER${R} ${r1}${B}✦${R}"
+    printf "%b%b\n" "$(cpad "$msg1")" "$msg1"
     sleep 0.05
-    local msg2="${GR}ﺭﺎﻈﺘﻧﻻﺍ ﻮﺟﺮﻤﻟﺍ ...${R}"
-    printf "%s%s\n" "$pad" "$msg2"
+    local msg2="${GR}... ﺭﺎﻈﺘﻧﻻﺍ ﺀﺎﺟﺮﻟﺍ${R}"
+    printf "%b%b\n" "$(cpad "$msg2")" "$msg2"
     printf "\n"
 }
 
-# ── صندوق انتظار ─────────────────────────────────────────
+# ── Waiting box ────────────────────────────────────────
 waiting_box() {
+    printf "\n"
     local inner="${Y1}⏳  ...ﻞﻴﻤﺤﺘﻟﺍ ﻱﺭﺎﺟ${R}"
-    printf "\n"
-    local pad
-    pad=$(cpad "$inner")
-    printf "%s%s\n" "$pad" "$inner"
+    printf "%b%b\n" "$(cpad "$inner")" "$inner"
     printf "\n"
 }
 
-# ── Spinner ──────────────────────────────────────────────
-SPINNER_FRAMES=("⣾" "⣽" "⣻" "⢿" "⡿" "⣟" "⣯" "⣷")
-SPINNER_PID=0
+# ── Spinner ────────────────────────────────────────────
+SPIN_FRAMES=('⣾' '⣽' '⣻' '⢿' '⡿' '⣟' '⣯' '⣷')
+spinner_on=false
+spinner_pid=""
 
-_spinner_run() {
-    local msg="$1" col="$2"
-    local i=0 nf=${#SPINNER_FRAMES[@]}
-    hide
-    while true; do
-        local f="${SPINNER_FRAMES[$((i % nf))]}"
-        printf "\033[2K\r  %s%s%s%s  %s%s%s ...%s   " \
-            "$col" "$B" "$f" "$R" \
-            "$W" "$msg" "$GR" "$R"
-        i=$((i + 1))
-        sleep 0.08
-    done
-}
-
-spinner_start() {
+start_spinner() {
     local msg="$1" col="${2:-$C1}"
-    _spinner_run "$msg" "$col" &
-    SPINNER_PID=$!
+    spinner_on=true
+    (
+        hide_cursor
+        local i=0
+        while $spinner_on; do
+            local f="${SPIN_FRAMES[$((i % 8))]}"
+            printf "\033[2K\r  %b%b%s%b  %b%s%b ...   " \
+                "$col" "$B" "$f" "$R" "$W" "$msg" "$GR"
+            i=$((i+1))
+            sleep 0.08
+        done
+        clr_line
+        show_cursor
+    ) &
+    spinner_pid=$!
 }
 
-spinner_stop() {
-    local ok="${1:-1}" msg="${2:-}"
-    if [ "$SPINNER_PID" -ne 0 ]; then
-        kill "$SPINNER_PID" 2>/dev/null
-        wait "$SPINNER_PID" 2>/dev/null
-        SPINNER_PID=0
-    fi
-    clr_line
-    show
-    local ic
-    if [ "$ok" -eq 1 ]; then
-        ic="${G1}${B}✓${R}"
+stop_spinner() {
+    spinner_on=false
+    wait $spinner_pid 2>/dev/null || true
+    local ok="$1" msg="$2"
+    local icon
+    if $ok; then
+        icon="${G1}${B}✓${R}"
     else
-        ic="${r1}${B}✗${R}"
+        icon="${r1}${B}✗${R}"
     fi
     if [ -n "$msg" ]; then
-        printf "\033[2K\r  %s  %s%s%s\n" "$ic" "$W" "$msg" "$R"
+        printf "\033[2K\r  %b  %b%s%b\n" "$icon" "$W" "$msg" "$R"
     fi
 }
 
-# ── ثوابت التحميل ───────────────────────────────────────
-RETRY_WAIT=5    # ثواني بين كل محاولة إعادة اتصال
-NET_TIMEOUT=20  # timeout لكل طلب HTTP بالثواني
-BAR_COL=$'\033[38;5;196m'   # أحمر فقط
-
-# ── تنسيق الحجم ──
-fz() {
-    local b=$1
-    if [ "$b" -lt 1024 ]; then
-        printf "%dB" "$b"
-    elif [ "$b" -lt 1048576 ]; then
-        awk "BEGIN{printf \"%.1fKB\", $b/1024}"
-    else
-        awk "BEGIN{printf \"%.1fMB\", $b/1048576}"
-    fi
+# ── Status line ────────────────────────────────────────
+st() {
+    local icon="$1" col="$2" text="$3" d="${4:-0.2}"
+    printf "  %b%b%s%b  %b%s%b\n" "$col" "$B" "$icon" "$R" "$W" "$text" "$R"
+    sleep "$d"
 }
 
-# ── تنسيق السرعة ──
-fs() {
-    local s=$1
-    if [ -z "$s" ] || [ "$s" -le 0 ] 2>/dev/null; then
-        printf "───"; return
-    fi
-    if [ "$s" -lt 1024 ]; then
-        printf "%.0fB/s" "$s"
-    elif [ "$s" -lt 1048576 ]; then
-        awk "BEGIN{printf \"%.1fKB/s\", $s/1024}"
-    else
-        awk "BEGIN{printf \"%.2fMB/s\", $s/1048576}"
-    fi
-}
+# ── Platform detection ─────────────────────────────────
+detect_platform() {
+    local sys=$(uname -s | tr '[:upper:]' '[:lower:]')
+    local mach=$(uname -m | tr '[:upper:]' '[:lower:]')
+    local android=false
 
-# ── رسم شريط التقدم ──
-show_progress() {
-    local dl=$1 tot=$2 t0=$3
-
-    if [ "$_RESIZE_FLAG" -ne 0 ]; then
-        _RESIZE_FLAG=0
-    else
-        clr_line
-    fi
-    _RESIZE_FLAG=0
-
-    local cols bw
-    cols=$(tw)
-    bw=$(( cols - 48 ))
-    [ "$bw" -lt 10 ] && bw=10
-
-    if [ "$tot" -le 0 ]; then
-        local bar="${BAR_COL}" k
-        for ((k=0; k<bw; k++)); do bar+="█"; done
-        bar+="$R"
-        printf "  %s▌%s%s▐%s  %s...ﻞﻴﻤﺤﺘﻟﺍ ﻱﺭﺎﺟ%s  %s%s%s" \
-            "$BAR_COL" "$bar" "$BAR_COL" "$R" \
-            "$W" "$R" "$C1" "$(fz "$dl")" "$R"
-        return
+    if [ "${ANDROID_ROOT:-}" != "" ] || {
+        [ -n "$(uname -o 2>/dev/null)" ] && echo "$(uname -o)" | grep -qi android
+    }; then
+        android=true
     fi
 
-    local pct=$(( dl * 100 / tot ))
-    [ "$pct" -gt 100 ] && pct=100
-    local filled=$(( bw * pct / 100 ))
-
-    local now elapsed avg
-    now=$(date +%s)
-    elapsed=$(( now - t0 ))
-    [ "$elapsed" -le 0 ] && elapsed=1
-    avg=$(( dl / elapsed ))
-
-    # شريط أحمر صلب — بدون ترعيش
-    local bar="${BAR_COL}" k
-    for ((k=0; k<bw; k++)); do
-        if [ "$k" -lt "$filled" ]; then
-            bar+="█"
+    if $android; then
+        case "$mach" in
+            *64*) echo "hex_phantom_android_arm64" ;;
+            *)    echo "hex_phantom_android_armv7" ;;
+        esac
+    elif [[ "$sys" =~ (windows|mingw|cygwin|msys) ]]; then
+        if [[ "$mach" =~ (64|amd64) ]]; then
+            echo "hex_phantom_windows_x64.exe"
         else
-            bar+="${GR}░"
+            echo "hex_phantom_windows_x86.exe"
         fi
-    done
-    bar+="$R"
-
-    printf "  %s▌%s%s▐%s %s%s%3d%%%s  %s%s%s/%s%s%s  %s%s%s" \
-        "$BAR_COL" "$bar" "$BAR_COL" "$R" \
-        "$BAR_COL" "$B" "$pct" "$R" \
-        "$W" "$(fz "$dl")" "$GR" "$W" "$(fz "$tot")" "$R" \
-        "$C1" "$(fs "$avg")" "$R"
-}
-
-# ── عرض عداد إعادة الاتصال ──
-show_reconnect() {
-    local attempt=$1 secs_left=$2
-
-    if [ "$_RESIZE_FLAG" -ne 0 ]; then
-        _RESIZE_FLAG=0
+    elif [ "$sys" = "linux" ]; then
+        case "$mach" in
+            x86_64|amd64)   echo "hex_phantom_linux_x64" ;;
+            aarch64|arm64)  echo "hex_phantom_linux_arm64" ;;
+            armv7*)         echo "hex_phantom_linux_armv7" ;;
+            *)              echo "hex_phantom_linux_x86" ;;
+        esac
     else
-        clr_line
+        return 1
     fi
-    _RESIZE_FLAG=0
-
-    local dots_count=$(( secs_left % 4 )) dots="" d
-    for ((d=0; d<dots_count; d++)); do dots+="·"; done
-
-    printf "  %s%s⟳%s  %sﺔﻜﺒﺸﻟﺍ ﺭﺎﻈﺘﻧﺍ%s  %sﺔﻴﻧﺎﺛ %s%s%2d%s  %sﺔﻟﻭﺎﺤﻣ #%s%s%s  %s%s%s" \
-        "$r1" "$B" "$R" \
-        "$W" "$R" \
-        "$GR" "$Y1" "$B" "$secs_left" "$R" \
-        "$GR" "$Y1" "$attempt" "$R" \
-        "$r1" "$dots" "$R"
 }
 
-# ── HEAD: الحجم الكلي ودعم الاستئناف ──
-_head_total_size=0
-_head_supports_res=0
+# ── Download with progress + resume + auto reconnect ──
+NET_TIMEOUT=20
+RETRY_WAIT=5
 
-head_check() {
-    local url="$1" headers content_length accept_ranges
-    headers=$(curl -sI --max-time "$NET_TIMEOUT" "$url" 2>/dev/null)
-    content_length=$(printf '%s' "$headers" | grep -i '^Content-Length:' | awk '{print $2}' | tr -d '\r\n')
-    accept_ranges=$(printf '%s' "$headers" | grep -i '^Accept-Ranges:' | awk '{print $2}' | tr -d '\r\n' | tr '[:upper:]' '[:lower:]')
-    _head_total_size="${content_length:-0}"
-    [ "$accept_ranges" = "bytes" ] && _head_supports_res=1 || _head_supports_res=0
-}
-
-# ── تحميل مع شريط تقدم + استئناف + إعادة اتصال تلقائي ──
 download_with_progress() {
     local url="$1" dest="$2"
-    local total_size=0 downloaded=0 supports_res=0
 
-    # ── التحقق من ملف جزئي مسبق ──
+    fz() {
+        local b=$1
+        if [ "$b" -lt 1024 ]; then printf "%dБ" "$b"
+        elif [ "$b" -lt 1048576 ]; then printf "%.1fKB" "$(awk "BEGIN{printf \"%.1f\", $b/1024}")"
+        else printf "%.1fMB" "$(awk "BEGIN{printf \"%.1f\", $b/1048576}")"
+        fi
+    }
+    fs() {
+        local s=$1
+        if [ "$s" -le 0 ]; then printf "───"
+        elif [ "$s" -lt 1024 ]; then printf "%dБ/s" "$s"
+        elif [ "$s" -lt 1048576 ]; then printf "%.1fKB/s" "$(awk "BEGIN{printf \"%.1f\", $s/1024}")"
+        else printf "%.2fMB/s" "$(awk "BEGIN{printf \"%.2f\", $s/1048576}")"
+        fi
+    }
+
+    local total_size=0 downloaded=0 supports_res=false start_time
+    start_time=$(date +%s.%N 2>/dev/null || date +%s)
+
+    head_check() {
+        local headers cl ar
+        headers=$(curl -sI --connect-timeout "$NET_TIMEOUT" "$url" 2>/dev/null || true)
+        if [ -n "$headers" ]; then
+            cl=$(echo "$headers" | grep -i '^Content-Length:' | tail -1 | awk '{print $2}' | tr -d '\r')
+            ar=$(echo "$headers" | grep -i '^Accept-Ranges:' | tail -1 | tr -d '\r')
+            total_size=${cl:-0}
+            if echo "$ar" | grep -qi 'bytes'; then
+                supports_res=true
+            else
+                supports_res=false
+            fi
+        else
+            total_size=0
+            supports_res=false
+        fi
+    }
+
+    show_progress() {
+        local dl=$1 tot=$2
+        if [ "$_resize_flag" -eq 0 ]; then
+            clr_line
+        fi
+        _resize_flag=0
+
+        local cols=$(tw)
+        local bw=$((cols - 48))
+        [ "$bw" -lt 10 ] && bw=10
+
+        if [ "$tot" -le 0 ]; then
+            local bar=""
+            local i
+            for ((i=0;i<bw;i++)); do bar+="█"; done
+            printf "  ${BAR_COL}▌%s%s${BAR_COL}▐${R}  ${W}...ﻞﻴﻤﺤﺘﻟﺍ ﻱﺭﺎﺟ${R}  ${C1}%s${R}" \
+                "$BAR_COL" "$bar" "$(fz "$dl")"
+            return
+        fi
+
+        local pct=$(( dl * 100 / tot ))
+        [ "$pct" -gt 100 ] && pct=100
+        local filled=$(( bw * pct / 100 ))
+
+        local now elapsed avg_speed
+        now=$(date +%s.%N 2>/dev/null || date +%s)
+        elapsed=$(awk "BEGIN{printf \"%.3f\", $now - $start_time}")
+        [ "${elapsed%.*}" -le 0 ] && elapsed=0.001
+        avg_speed=$(awk "BEGIN{printf \"%.0f\", $dl / $elapsed}")
+
+        local bar="$BAR_COL"
+        local i
+        for ((i=0;i<bw;i++)); do
+            if [ $i -lt $filled ]; then bar+="█"; else bar+="${GR}░"; fi
+        done
+        bar+="$R"
+
+        printf "  ${BAR_COL}▌%s${BAR_COL}▐${R} ${BAR_COL}${B}%3d%%${R}  ${W}%s${GR}/${W}%s${R}  ${C1}%s${R}" \
+            "$bar" "$pct" "$(fz "$dl")" "$(fz "$tot")" "$(fs "$avg_speed")"
+    }
+
+    show_reconnect() {
+        local attempt="$1" secs_left="$2"
+        if [ "$_resize_flag" -eq 0 ]; then
+            clr_line
+        fi
+        _resize_flag=0
+        local dots=""
+        local i
+        for ((i=0;i<secs_left%4;i++)); do dots+="·"; done
+        printf "  ${r1}${B}⟳${R}  ${W}ﺔﻜﺒﺸﻟﺍ ﺭﺎﻈﺘﻧﺍ${R}  ${GR}ﺔﻴﻧﺎﺛ ${Y1}${B}%2d${R}  ${GR}ﺔﻟﻭﺎﺤﻣ #${Y1}%d${R}  ${r1}%s${R}" \
+            "$secs_left" "$attempt" "$dots"
+    }
+
+    # ── Initial setup ──────────────────────────────────
     if [ -f "$dest" ]; then
-        downloaded=$(stat -c%s "$dest" 2>/dev/null || stat -f%z "$dest" 2>/dev/null || echo 0)
+        downloaded=$(stat -c%s "$dest" 2>/dev/null || echo 0)
     fi
 
-    head_check "$url"
-    total_size="$_head_total_size"
-    supports_res="$_head_supports_res"
-
-    if [ "$downloaded" -gt 0 ] && [ "$supports_res" -eq 0 ]; then
-        rm -f "$dest"; downloaded=0
+    head_check
+    if [ "$downloaded" -gt 0 ] && ! $supports_res; then
+        rm -f "$dest"
+        downloaded=0
     fi
 
-    # اكتمل مسبقاً؟
+    # Already completed?
     if [ "$total_size" -gt 0 ] && [ "$downloaded" -ge "$total_size" ]; then
         local ok_msg="  ✓  ﻞﻴﻤﺤﺘﻟﺍ ﻢﺗ  ✓  "
-        local cols pad_w pad col
-        cols=$(tw)
-        pad_w=$(( (cols - ${#ok_msg}) / 2 ))
-        [ "$pad_w" -lt 0 ] && pad_w=0
-        pad=$(printf '%*s' "$pad_w" '')
+        local col
         for col in "$G1" "$W" "$G1" "$W" "$G1"; do
-            printf "\033[2K\r%s%s%s%s%s" "$pad" "$col" "$B" "$ok_msg" "$R"
+            clr_line
+            printf "%b%b%s%b" "$(cpad "$ok_msg")" "$col" "$B" "$ok_msg" "$R"
             sleep 0.13
         done
-        printf "\n\n"; return
+        printf "\n\n"
+        return 0
     fi
 
     waiting_box
 
-    local t0
-    t0=$(date +%s)
-
-    # ── حلقة التحميل مع إعادة الاتصال اللانهائية ──
+    # ── Main download loop ─────────────────────────────
     local attempt=0
     while true; do
-        if [ "$downloaded" -gt 0 ] && [ "$supports_res" -eq 1 ]; then
-            curl -s --max-time 0 --connect-timeout "$NET_TIMEOUT" \
-                -C "$downloaded" -o "$dest" "$url" &
-        else
-            curl -s --max-time 0 --connect-timeout "$NET_TIMEOUT" \
-                -o "$dest" "$url" &
+        if [ $attempt -gt 0 ]; then
+            head_check
+            if [ "$downloaded" -gt 0 ] && ! $supports_res; then
+                rm -f "$dest"
+                downloaded=0
+            fi
         fi
-        local curl_pid=$!
 
-        # مراقبة التقدم
-        local current_size
-        while kill -0 "$curl_pid" 2>/dev/null; do
-            current_size=0
-            [ -f "$dest" ] && current_size=$(stat -c%s "$dest" 2>/dev/null || stat -f%z "$dest" 2>/dev/null || echo 0)
-            show_progress "$current_size" "$total_size" "$t0"
+        local curl_opts=(-L -s -S --connect-timeout "$NET_TIMEOUT")
+        if [ "$downloaded" -gt 0 ]; then
+            curl_opts+=(-C -)
+        fi
+        curl_opts+=(-o "$dest" "$url")
+
+        curl "${curl_opts[@]}" &
+        local pid=$!
+
+        # monitor progress
+        while kill -0 $pid 2>/dev/null; do
+            if [ -f "$dest" ]; then
+                downloaded=$(stat -c%s "$dest" 2>/dev/null || echo 0)
+            fi
+            show_progress "$downloaded" "$total_size"
             sleep 0.1
         done
+        wait $pid
+        local rc=$?
+        [ -f "$dest" ] && downloaded=$(stat -c%s "$dest" 2>/dev/null || echo 0)
 
-        wait "$curl_pid"
-        local curl_exit=$?
-        [ "$curl_exit" -eq 0 ] && break  # اكتمل
+        if [ $rc -eq 0 ]; then
+            break
+        fi
 
-        # ── انقطع الاتصال: عدّ تنازلي ثم إعادة المحاولة ──
-        attempt=$((attempt + 1))
+        # failure: reconnect wait
+        attempt=$((attempt+1))
         local s
         for ((s=RETRY_WAIT; s>0; s--)); do
-            show_reconnect "$attempt" "$s"; sleep 1
+            show_reconnect "$attempt" "$s"
+            sleep 1
         done
-
-        # فحص HEAD قبل المحاولة التالية
-        head_check "$url"
-        total_size="$_head_total_size"
-        supports_res="$_head_supports_res"
-
-        [ -f "$dest" ] && downloaded=$(stat -c%s "$dest" 2>/dev/null || stat -f%z "$dest" 2>/dev/null || echo 0)
-
-        if [ "$downloaded" -gt 0 ] && [ "$supports_res" -eq 0 ]; then
-            [ -f "$dest" ] && rm -f "$dest"; downloaded=0
-        fi
     done
 
-    # ── رسالة الاكتمال ──
+    # Completion
     local ok_msg="  ✓  ﻞﻴﻤﺤﺘﻟﺍ ﻢﺗ  ✓  "
-    local cols pad_w pad col
-    cols=$(tw)
-    pad_w=$(( (cols - ${#ok_msg}) / 2 ))
-    [ "$pad_w" -lt 0 ] && pad_w=0
-    pad=$(printf '%*s' "$pad_w" '')
+    local col
     for col in "$G1" "$W" "$G1" "$W" "$G1"; do
-        printf "\033[2K\r%s%s%s%s%s" "$pad" "$col" "$B" "$ok_msg" "$R"
+        clr_line
+        printf "%b%b%s%b" "$(cpad "$ok_msg")" "$col" "$B" "$ok_msg" "$R"
         sleep 0.13
     done
     printf "\n\n"
 }
 
-# ── حالة ────────────────────────────────────────────────
-st() {
-    local icon="$1" col="$2" text="$3" d="${4:-0.2}"
-    printf "  %s%s%s%s  %s%s%s\n" "$col" "$B" "$icon" "$R" "$W" "$text" "$R"
-    sleep "$d"
-}
-
-# ── كشف النظام ──────────────────────────────────────────
-detect_platform() {
-    local s m android=0
-    s=$(uname -s | tr '[:upper:]' '[:lower:]')
-    m=$(uname -m | tr '[:upper:]' '[:lower:]')
-
-    if [ -f /system/build.prop ] || \
-       { command -v getprop &>/dev/null && [ -n "$(getprop ro.build.version.release 2>/dev/null)" ]; }; then
-        android=1
-    fi
-
-    if [ "$android" -eq 1 ]; then
-        case "$m" in
-            *64*|*aarch64*) echo "hex_phantom_android_arm64" ;;
-            *)              echo "hex_phantom_android_armv7" ;;
-        esac
-        return
-    fi
-
-    case "$s" in
-        linux)
-            case "$m" in
-                x86_64|amd64)  echo "hex_phantom_linux_x64"   ;;
-                aarch64|arm64) echo "hex_phantom_linux_arm64"  ;;
-                armv7*)        echo "hex_phantom_linux_armv7"  ;;
-                *)             echo "hex_phantom_linux_x86"    ;;
-            esac
-            ;;
-        *) echo "" ;;
-    esac
-}
-
-# ── main ─────────────────────────────────────────────────
+# ── main ────────────────────────────────────────────────
 main() {
+    trap 'show_cursor; exit' INT TERM
+
     banner_pulse
     info_box
 
-    spinner_start " " "$C1"
+    start_spinner " " "$C1"
     sleep 1.0
-    local plat
-    plat=$(detect_platform)
-    spinner_stop 0 ""
+    plat=$(detect_platform) || plat=""
+    stop_spinner false ""
+    if [ -z "$plat" ]; then
+        st "✗" "$r1" "Unsupported platform" 0.5
+        exit 1
+    fi
 
-    [ -z "$plat" ] && exit 1
+    local src_dir
+    src_dir="$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")/src"
+    local src_file="$src_dir/$plat"
 
-    local script_dir src
-    script_dir="$(cd "$(dirname "$0")" && pwd)"
-    src="${script_dir}/src/${plat}"
-
-    if [ -f "$src" ]; then
-        st "→" "$G1" "...ﺮﺷﺎﺒﻣ ﻞﻴﻐﺸﺗ"
-        sleep 1
-        chmod 755 "$src"
-        "./$src" "$@"
+    if [ -f "$src_file" ]; then
+        st "→" "$G1" "...ﺮﺷﺎﺒﻣ ﻞﻴﻐﺸﺗ" 1
+        if [[ "$plat" == hex_phantom_windows* ]]; then
+            "$src_file" "$@"
+        else
+            chmod +x "$src_file"
+            "$src_file" "$@"
+        fi
         exit 0
     fi
 
-    # ── الاتصال بالمخدم مع إعادة محاولة لانهائية ──
-    local attempt=0 data="" resp curl_exit
-    while [ -z "$data" ]; do
-        spinner_start " ...ﻝﺎﺼﺗﻻﺍ ﻱﺭﺎﺟ" "$r1"
-        resp=$(curl -s --max-time "$NET_TIMEOUT" \
-            "https://api.github.com/repos/ma-dark404/MikroTik-HEX/releases/latest" 2>/dev/null)
-        curl_exit=$?
-        spinner_stop 0 ""
-
-        if [ "$curl_exit" -eq 0 ] && [ -n "$resp" ]; then
-            data="$resp"
-            clr_line
-            printf "  %s%s✓%s  %sﻝﺎﺼﺗﻻﺍ ﻢﺗ%s\n" "$G1" "$B" "$R" "$W" "$R"
-        else
-            attempt=$((attempt + 1))
-            local s
-            for ((s=RETRY_WAIT; s>0; s--)); do
-                printf "\033[2K\r  %s%s⟳%s  %sﺔﻜﺒﺸﻟﺍ ﺭﺎﻈﺘﻧﺍ%s  %s%s%2ds%s  %s#%d%s" \
-                    "$r1" "$B" "$R" "$W" "$R" \
-                    "$Y1" "$B" "$s" "$R" "$GR" "$attempt" "$R"
-                sleep 1
-            done
-            clr_line
+    # ── Fetch latest release with infinite retry ──────
+    local attempt=0 data tag=""
+    while [ -z "$tag" ]; do
+        start_spinner " ...ﻝﺎﺼﺗﻻﺍ ﻱﺭﺎﺟ" "$r1"
+        data=$(curl -s --connect-timeout "$NET_TIMEOUT" \
+            "https://api.github.com/repos/ma-dark404/MikroTik-HEX/releases/latest" 2>/dev/null || true)
+        if [ -n "$data" ]; then
+            tag=$(echo "$data" | grep -o '"tag_name": *"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"/\1/')
         fi
+        if [ -n "$tag" ]; then
+            stop_spinner true "ﻝﺎﺼﺗﻻﺍ ﻢﺗ"
+            break
+        fi
+        stop_spinner false ""
+        attempt=$((attempt+1))
+        local s
+        for ((s=RETRY_WAIT; s>0; s--)); do
+            clr_line
+            printf "  ${r1}${B}⟳${R}  ${W}ﺔﻜﺒﺸﻟﺍ ﺭﺎﻈﺘﻧﺍ${R}  ${Y1}${B}%2ds${R}  ${GR}#%d${R}" \
+                "$s" "$attempt"
+            sleep 1
+        done
+        clr_line
     done
 
-    local dl_url=""
-    if command -v jq &>/dev/null; then
-        dl_url=$(printf '%s' "$data" | \
-            jq -r --arg p "$plat" '.assets[] | select(.name == $p) | .browser_download_url' 2>/dev/null | head -1)
-    fi
+    local dl_url="https://github.com/ma-dark404/MikroTik-HEX/releases/download/${tag}/${plat}"
 
-    if [ -z "$dl_url" ] && command -v python3 &>/dev/null; then
-        dl_url=$(printf '%s' "$data" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-plat = '$plat'
-for a in data.get('assets', []):
-    if a['name'] == plat:
-        print(a['browser_download_url'])
-        break
-" 2>/dev/null)
-    fi
-
-    if [ -z "$dl_url" ]; then
-        dl_url=$(printf '%s' "$data" | \
-            grep -o '"browser_download_url":"[^"]*'"$plat"'"' | \
-            head -1 | sed 's/"browser_download_url":"//;s/"//')
-    fi
-
-    if [ -z "$dl_url" ]; then
-        st "✗" "$r1" "ﺩﻮﺟﻮﻣ ﺮﻴﻏ ﻒﻠﻤﻟﺍ"; exit 1
+    local http_code
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "$dl_url")
+    if [ "$http_code" != "200" ]; then
+        st "✗" "$r1" "ﺩﻮﺟﻮﻣ ﺮﻴﻏ ﻒﻠﻤﻟﺍ" 0.5
+        exit 1
     fi
 
     download_with_progress "$dl_url" "$plat"
 
-    spinner_start "...ﻞﻴﻐﺸﺘﻟﺍ ﻱﺭﺎﺟ" "$G1"
+    start_spinner "...ﻞﻴﻐﺸﺘﻟﺍ ﻱﺭﺎﺟ" "$G1"
     sleep 1.3
-    spinner_stop 1 "ﻞﻴﻐﺸﺘﻟﺍ ﻢﺗ"
+    stop_spinner true "ﻞﻴﻐﺸﺘﻟﺍ ﻢﺗ"
 
-    chmod 755 "$plat"
-    "./$plat" "$@"
+    if [[ "$plat" == hex_phantom_windows* ]]; then
+        ./"$plat" "$@" &
+    else
+        chmod +x "$plat"
+        ./"$plat" "$@"
+    fi
 }
 
 main "$@"
-
