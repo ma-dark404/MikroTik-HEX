@@ -47,3 +47,12 @@ git clone https://github.com/ma-dark404/MikroTik-HEX.git
 cd MikroTik-HEX
 chmod +x hex_installer.sh
 bash hex_installer.sh
+---
+
+## ⚡ **التشغيل السريع**
+
+بعد تثبيت الأداة، تقدر تشغلها من أي مكان بمجرد كتابة:
+
+```bash
+HEX-M
+```
