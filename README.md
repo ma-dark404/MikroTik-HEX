@@ -35,7 +35,7 @@
 | <img src="https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg" width="20" height="20"> Linux | x64 | `hex_phantom_linux_x64` |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Raspberry_Pi_Logo.svg" width="20" height="20"> Raspberry Pi 4/5 | ARM64 | `hex_phantom_linux_arm64` |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Raspberry_Pi_Logo.svg" width="20" height="20"> Raspberry Pi 2/3 | ARMv7 | `hex_phantom_linux_armv7` |
-| <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Termux_logo.svg" width="20" height="20"> Android (Termux) | ARM64 | `hex_phantom_android_arm64` |
+| <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Termux_2.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" width="20" height="20"> Android (Termux) | ARM64 | `hex_phantom_android_arm64` |
 
 ---
 
@@ -50,7 +50,7 @@ chmod +x hex_installer.sh && \
 sudo bash hex_installer.sh -y
 ```
 
-### <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Termux_logo.svg" width="18" height="18"> **Android (Termux)**
+### <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Termux_2.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" width="18" height="18"> **Android (Termux)**
 ```bash
 pkg install git -y && \
 git clone https://github.com/ma-dark404/MikroTik-HEX && \
