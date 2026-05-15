@@ -41,7 +41,7 @@
 
 ## 🚀 **التثبيت والتشغيل**
 
-### 🐧 **Linux (Debian/Ubuntu)**
+### 🐧 **Linux**
 ```bash
 sudo apt update -y && sudo apt install git -y && \
 git clone https://github.com/ma-dark404/MikroTik-HEX && \
@@ -50,10 +50,6 @@ chmod +x hex_installer.sh && \
 sudo bash hex_installer.sh -y
 ```
 
-بعد التثبيت، يمكنك تشغيل الأداة في أي وقت باستخدام الأمر:
-```bash
-HEX-M
-```
 
 ### 📱 **Android (Termux)**
 ```bash
