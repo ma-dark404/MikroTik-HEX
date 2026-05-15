@@ -13,7 +13,7 @@
 ---
 
 ## 📖 **عن الأداة**
- هي أداة أتمتة لتخمين واختراق بطاقات شبكات المايكروتك (Hotspot) عبر هجوم الـ Brute-Force.
+هي أداة أتمتة لتخمين واختراق بطاقات شبكات المايكروتك (Hotspot) عبر هجوم الـ Brute-Force.
 
 ---
 
@@ -37,8 +37,25 @@
 | 🍓 Raspberry Pi 2/3 | ARMv7 | `hex_phantom_linux_armv7` |
 | 📱 Android (Termux) | ARM64 | `hex_phantom_android_arm64` |
 
+---
+
 ## 🚀 **التثبيت والتشغيل**
 
+### 🐧 **Linux (Debian/Ubuntu)**
+```bash
+sudo apt update -y && sudo apt install git -y && \
+git clone https://github.com/ma-dark404/MikroTik-HEX && \
+cd MikroTik-HEX && \
+chmod +x hex_installer.sh && \
+sudo bash hex_installer.sh -y
+```
+
+بعد التثبيت، يمكنك تشغيل الأداة في أي وقت باستخدام الأمر:
+```bash
+HEX-M
+```
+
+### 📱 **Android (Termux)**
 ```bash
 pkg install git -y && \
 git clone https://github.com/ma-dark404/MikroTik-HEX && \
@@ -47,12 +64,7 @@ chmod +x hex_installer.sh && \
 bash hex_installer.sh -y
 ```
 
----
-
-## ⚡ **التشغيل السريع**
-
-بعد تثبيت الأداة، يمكنك تشغيلها في أي وقت بمجرد كتابة:
-
+بعد التثبيت، يمكنك تشغيل الأداة في أي وقت باستخدام الأمر:
 ```bash
 HEX-M
 ```
