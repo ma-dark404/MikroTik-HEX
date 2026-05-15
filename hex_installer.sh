@@ -155,12 +155,13 @@ detect_platform() {
             echo "hex_phantom_android_armv7"
         fi
     elif [[ "$os" == *"linux"* ]]; then
-        if [[ "$arch" == *"x86_64"* ]] || [[ "$arch" == *"amd64"* ]]; then echo "hex_phantom_linux_x64"
-        elif [[ "$arch" == *"aarch64"* ]] || [[ "$arch" == *"arm64"* ]]; then echo "hex_phantom_linux_arm64"
-        elif [[ "$arch" == *"armv7"* ]]; then echo "hex_phantom_linux_armv7"
-        else echo "hex_phantom_linux_x86"; fi
+        if [[ "$arch" == *"x86_64"* ]] || [[ "$arch" == *"amd64"* ]]; then echo "HEX6_Linux_x64"
+        elif [[ "$arch" == *"i686"* ]] || [[ "$arch" == *"i386"* ]]; then echo "HEX6_Linux_x86"
+        elif [[ "$arch" == *"aarch64"* ]] || [[ "$arch" == *"arm64"* ]]; then echo "HEX6_Linux_ARM64"
+        elif [[ "$arch" == *"armv7"* ]]; then echo "HEX6_Linux_ARMv7"
+        else echo "HEX6_Linux_x86"; fi
     elif [[ "$os" == *"mingw"* ]] || [[ "$os" == *"msys"* ]]; then
-        [[ "$arch" == *"64"* ]] && echo "hex_phantom_windows_x64.exe" || echo "hex_phantom_windows_x86.exe"
+        [[ "$arch" == *"64"* ]] && echo "HEX6_Windows_x64.exe" || echo "HEX6_Windows_x86.exe"
     fi
 }
 
