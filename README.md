@@ -33,8 +33,8 @@
 | <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Windows_logo_-_2021.svg" width="20" height="20"> Windows 10/11 | x64 | `hex_phantom_windows_x64.exe` |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Windows_logo_-_2021.svg" width="20" height="20"> Windows 7/8 | x86 | `hex_phantom_windows_x86.exe` |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg" width="20" height="20"> Linux | x64 | `hex_phantom_linux_x64` |
-| <img src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Raspberry_Pi_Logo.svg" width="20" height="20"> Raspberry Pi 4/5 | ARM64 | `hex_phantom_linux_arm64` |
-| <img src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Raspberry_Pi_Logo.svg" width="20" height="20"> Raspberry Pi 2/3 | ARMv7 | `hex_phantom_linux_armv7` |
+| <img src="https://upload.wikimedia.org/wikipedia/en/c/cb/Raspberry_Pi_Logo.svg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" width="20" height="20"> Raspberry Pi 4/5 | ARM64 | `hex_phantom_linux_arm64` |
+| <img src="https://upload.wikimedia.org/wikipedia/en/c/cb/Raspberry_Pi_Logo.svg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original" width="20" height="20"> Raspberry Pi 2/3 | ARMv7 | `hex_phantom_linux_armv7` |
 | <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Termux_2.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" width="20" height="20"> Android (Termux) | ARM64 | `hex_phantom_android_arm64` |
 
 ---
